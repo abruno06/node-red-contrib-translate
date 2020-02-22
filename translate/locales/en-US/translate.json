@@ -1,0 +1,12 @@
+{
+    "translate": {
+        "labels": {
+            "name": "Name"
+        },
+        "tabs-label": {
+            "inputfields": "Input",
+            "outputfields": "Output",
+            "aclrules": "Translation"
+        }
+    }
+}

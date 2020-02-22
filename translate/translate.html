@@ -1,0 +1,651 @@
+<script type="text/html" data-template-name="translate">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="translate.labels.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]translate.labels.name">
+    </div>
+    <div class="form-row" style="margin-bottom:0;">
+        <label><i class="fa fa-list"></i> <span data-i18n="translate.label.rules"></span></label>
+    </div>
+    <div class="form-row node-input-rule-container-row">
+        <ol id="node-input-rule-container"></ol>
+    </div>
+    <div class="form-row">
+		<ul style="background: #fff; min-width: 1000px; margin-bottom: 20px;" id="node-translate-tabs"></ul>
+    </div>
+    
+    <div id="node-translate-tabs-content" style="min-height: 180px;">
+        <div id="translate-tab-inputfields" style="display:none">
+            <div class="form-row node-input-inputfields-container-row">
+                <ol id="node-input-inputfields-container"></ol>
+            </div>
+        </div>
+        <div id="translate-tab-outputfields" style="display:none">
+            <div class="form-row node-input-outputfields-container-row">
+                <ol id="node-input-outputfields-container"></ol>
+            </div>
+        </div>
+        <div id="translate-tab-aclrules" style="display:none">
+            <div class="form-row node-input-aclrules-container-row">
+                <ol id="node-input-aclrules-container"></ol>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('translate', {
+        color: "#E2D96E",
+        category: 'function',
+        defaults: {
+            name: {
+                value: ""
+            },
+            rulfes: {
+                value: [{
+                    t: "set",
+                    p: "payload",
+                    pt: "msg",
+                    to: "",
+                    tot: "str"
+                }]
+            },
+            // legacy
+            action: {
+                value: ""
+            },
+            property: {
+                value: ""
+            },
+            from: {
+                value: ""
+            },
+            to: {
+                value: ""
+            },
+            reg: {
+                value: false
+            },
+
+            inputfields: {
+                value: []
+            },
+            outputfields: {
+                value: []
+            },
+            aclrules: {
+                value: []
+            }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "swap.svg",
+        label: function () {
+            return this.name || "translate";
+        },
+        labelStyle: function () {
+            return this.name ? "node_label_italic" : "";
+        },
+        oneditprepare: function () {
+            /* var set = this._("translate.action.set");
+             var translate = this._("translate.action.translate");
+             var del = this._("translate.action.delete");
+             var move = this._("translate.action.move");
+             var to = this._("translate.action.to");
+             var search = this._("translate.action.search");
+             var replace = this._("translate.action.replace");
+             var regex = this._("translate.label.regex");
+ */
+            var node = this;
+            const MAXCOLUMN = 2;
+
+            function UpdateACLRules() {
+                $("#node-input-aclrules-container").editableList('empty')
+
+                for (var j = 0; j < node.aclrules.length; j++) {
+                    var item = node.aclrules[j];
+
+                    $("#node-input-aclrules-container").editableList('addItem', item);
+                }
+            }
+
+            function GenerateRule() {
+                let rule = { "i": {}, "o": {} };
+                for (var i = 0; i < node.inputfields.length; i++) {
+                    let inputfield = node.inputfields[i]
+                    let r_name = inputfield.n
+                    console.log("GR:Add " + r_name + " on all ACL")
+                    if (!(r_name in rule["i"])) {
+                        rule["i"][r_name] = { p: ".*", pt: "re" };
+                        console.log("GR:Create " + r_name + " with " + rule["i"][r_name])
+                    }
+
+                }
+
+                for (var i = 0; i < node.outputfields.length; i++) {
+                    let outputfield = node.outputfields[i]
+                    let r_name = outputfield.n
+                    console.log("GR:Add " + r_name + " on all ACL")
+                    if (!(r_name in rule["o"])) {
+                        rule["o"][r_name] = { p: "payload", pt: "msg" };
+                        console.log("GR:Create " + r_name + " with " + rule["o"][r_name])
+                    }
+
+                }
+                return rule;
+            }
+
+            function UpdateACLInput() {
+                console.log("UACLI:")
+                console.log(node.aclrules)
+                let InputFields = []
+                for (var i = 0; i < node.inputfields.length; i++) {
+                    let inputfield = node.inputfields[i]
+                    let r_name = inputfield.n
+                    InputFields.push(r_name)
+                    console.log("UACLI:Add " + r_name + " on all ACL")
+
+                    for (var j = 0; j < node.aclrules.length; j++) {
+                        //  var item = this.aclrules[i];
+
+                        console.log("UACLI:R-" + j + ":" + JSON.stringify(node.aclrules[j]["i"]))
+                        if (!(node.aclrules[j].hasOwnProperty("i"))) {
+                            node.aclrules[j]['i'] = {};
+                            console.log("UACLI:Add input rule")
+                        }
+
+                        if (!(node.aclrules[j]["i"].hasOwnProperty(r_name))) {
+                            node.aclrules[j]["i"][r_name] = { p: ".*", pt: "re" };
+                            console.log("UACLI:add " + r_name + " to " + j)
+                        }
+                        console.log("UACLI:R+" + j + ":" + JSON.stringify(node.aclrules[j]["i"]))
+                        console.log("Input Rules:" + JSON.stringify(node.aclrules[j]["i"]))
+                    }
+                }
+                console.log("Delete extra key if Any")
+                console.log("Valide Keys")
+                console.log(InputFields)
+
+                for (var j = 0; j < node.aclrules.length; j++) {
+                    //  console.log("UACLI:R-" + j + ":" + JSON.stringify(node.aclrules[j]))
+                    for (var r_n in node.aclrules[j]["i"]) {
+                        //   console.log(InputFields.indexOf(r_n))
+                        if (InputFields.indexOf(r_n) === -1) {
+                            delete node.aclrules[j]["i"][r_n];
+                            console.log("UACLI:delete " + r_n + " to " + j)
+                        }
+
+                    }
+                }
+
+            }
+
+
+
+            function AddACLInput(item) {
+                console.log("AACLI:")
+                console.log(item)
+                for (var j = 0; j < node.aclrules.length; j++) {
+                    //  var item = this.aclrules[i];
+                    console.log("AACLI:R-" + j + ":" + JSON.stringify(node.aclrules[j]["i"]))
+                    if (!(node.aclrules[j].hasOwnProperty("i"))) {
+                        node.aclrules[j]['i'] = {};
+                        console.log("AACLI:Add input rule")
+                    }
+                    if (!(node.aclrules[j]["i"].hasOwnProperty(item.n))) {
+                        node.aclrules[j]["i"][item.n] = { p: ".*", pt: "re" };
+                        console.log("AACLI:add " + item.n + " to " + j)
+                    }
+                    console.log("AACLI:R+" + j + ":" + JSON.stringify(node.aclrules[j]["i"]))
+                    console.log("Input Rules:" + JSON.stringify(node.aclrules[j]["i"]))
+                }
+            }
+
+            // output
+            function UpdateACLOutput() {
+                console.log("UACLO:")
+                console.log(node.aclrules)
+                let OutputFields = []
+                for (var i = 0; i < node.outputfields.length; i++) {
+                    let outputfield = node.outputfields[i]
+                    let r_name = outputfield.n
+                    OutputFields.push(r_name)
+                    console.log("UACLO:Add " + r_name + " on all ACL")
+
+                    for (var j = 0; j < node.aclrules.length; j++) {
+                        //  var item = this.aclrules[i];
+
+                        console.log("UACLI:R-" + j + ":" + JSON.stringify(node.aclrules[j]["o"]))
+                        if (!(node.aclrules[j].hasOwnProperty("o"))) {
+                            node.aclrules[j]['o'] = {};
+                            console.log("UACLO:Add output rule")
+                        }
+
+                        if (!(node.aclrules[j]["o"].hasOwnProperty(r_name))) {
+                            node.aclrules[j]["o"][r_name] = { p: "payload", pt: "msg" };
+                            console.log("UACLO:add " + r_name + " to " + j)
+                        }
+                        console.log("UACLO:R+" + j + ":" + JSON.stringify(node.aclrules[j]["o"]))
+                        console.log("Output Rules:" + JSON.stringify(node.aclrules[j]["o"]))
+                    }
+                }
+                console.log("Delete extra key if Any")
+                console.log("Valide Keys")
+                console.log(OutputFields)
+
+                for (var j = 0; j < node.aclrules.length; j++) {
+                    for (var r_n in node.aclrules[j]["o"]) {
+                        if (OutputFields.indexOf(r_n) === -1) {
+                            delete node.aclrules[j]["o"][r_n];
+                            console.log("UACLO:delete " + r_n + " to " + j)
+                        }
+
+                    }
+                }
+
+            }
+
+
+
+            function AddACLOutput(item) {
+                console.log("AACLO:")
+                console.log(item)
+
+                for (var j = 0; j < node.aclrules.length; j++) {
+                    //  var item = this.aclrules[i];
+
+                    console.log("AACLO:R-" + j + ":" + JSON.stringify(node.aclrules[j]["o"]))
+                    if (!(node.aclrules[j].hasOwnProperty("o"))) {
+                        node.aclrules[j]['o'] = {};
+                        console.log("AACLO:Add output rule")
+                    }
+
+                    if (!(node.aclrules[j]["o"].hasOwnProperty(item.n))) {
+                        node.aclrules[j]["o"][item.n] = { p: "payload", pt: "msg" };
+                        console.log("AACLO:add " + item.n + " to " + j)
+                    }
+                    console.log("AACLO:R+" + j + ":" + JSON.stringify(node.aclrules[j]["o"]))
+                    console.log("Output Rules:" + JSON.stringify(node.aclrules[j]["o"]))
+                }
+
+            }
+
+
+
+            var tabs = RED.tabs.create({
+                id: "node-translate-tabs",
+                onchange: function (tab) {
+                    $("#node-translate-tabs-content")
+                        .children()
+                        .hide();
+                    $("#" + tab.id).show();
+                    $("#" + tab.id).resize();
+
+                }
+            });
+            tabs.addTab({
+                id: "translate-tab-inputfields",
+                label: this._("translate.tabs-label.inputfields")
+            });
+
+            tabs.addTab({
+                id: "translate-tab-outputfields",
+                label: this._("translate.tabs-label.outputfields")
+            });
+            tabs.addTab({
+                id: "translate-tab-aclrules",
+                label: this._("translate.tabs-label.aclrules")
+            });
+
+            setTimeout(function () {
+                tabs.resize();
+            }, 0);
+
+            function resizeRuleIn(elementIn) {
+                var newWidth = elementIn.width();
+                console.log(elementIn)
+                console.log(newWidth)
+                elementIn.find('.red-ui-typedInput').typedInput("width", newWidth - 130);
+
+            }
+            function resizeRuleOut(elementOut) {
+                var newWidth = elementOut.width();
+                console.log(elementOut)
+                console.log(newWidth)
+                elementOut.find('.red-ui-typedInput').typedInput("width", 450);
+
+            }
+
+            function resizeRuleACL(element) {
+                var newWidth = element.width();
+                element.find('.red-ui-typedInput').typedInput("width", 450);
+
+            }
+
+
+            // ACL
+
+
+            $('#node-input-aclrules-container')
+                .css('min-height', '150px')
+                .css('min-width', '450px')
+                .editableList({
+                    addItem: function (container, i, opt) {
+                        console.log(opt)
+                        var aclrule = opt;
+                        if (!aclrule.hasOwnProperty('i')) {
+                            aclrule = GenerateRule()
+
+                        }
+
+                        container.css({
+                            overflow: 'hidden',
+                            whiteSpace: 'nowrap'
+                        });
+
+                        console.log("ACL");
+                        console.log(aclrule);
+
+                        let keysI = Object.keys(aclrule['i']);
+                        let lenI = keysI.length;
+                        let n_rowI = parseInt(lenI / MAXCOLUMN) + 1;
+
+                        let keysO = Object.keys(aclrule['o']);
+                        let lenO = keysO.length;
+                        let n_rowO = parseInt(lenO / MAXCOLUMN) + 1;
+
+                        let RowI = [];
+                        let RowO = [];
+                        for (i = 0; i < n_rowI; i++) {
+                            let row = $('<div/>', {
+                                //    style: "display:inline-block;text-align:right; width:120px; padding-right:10px; box-sizing:border-box;"
+                            }).appendTo(container);
+                            RowI.push(row);
+                        }
+
+                        for (i = 0; i < n_rowO; i++) {
+                            let row = $('<div/>', {
+                                //    style: "display:inline-block;text-align:right; width:120px; padding-right:10px; box-sizing:border-box;"
+                            }).appendTo(container);
+                            RowO.push(row);
+                        }
+                        console.log("In ACL Rule - 1");
+                        console.log("IF:" + JSON.stringify(node.inputfields));
+                        let r = 0;
+
+                        for (var inputelement in aclrule['i']) {
+                            let r_num = parseInt(r / MAXCOLUMN);
+                            let row = RowI[r_num];
+                            console.log("ACL AE   >" + inputelement);
+                            console.log("ACL AE-V >" + aclrule['i'][inputelement]);
+                            $('<label>' + inputelement + ':</label>', { type: "text" }).appendTo(row);
+                            var ACL = $('<input/>', {
+                                class: "node-input-aclrule-inputfield-" + inputelement,
+                                type: "text",
+                                style: "width:80px; margin-right:10px; background-color:#C0DEED"
+
+                            }).appendTo(row)
+                                .typedInput({
+                                    types: ['re']
+                                });
+                            ACL.typedInput('value', aclrule['i'][inputelement].p);
+                            ACL.typedInput('type', aclrule['i'][inputelement].pt);
+                            r++;
+                        }
+
+                        // OUTPUT
+                        console.log("In ACL Rule - 1")
+                        console.log("OF:" + JSON.stringify(node.outputfields))
+                        r = 0
+                        for (var outputelement in aclrule['o']) {
+                            let r_num = parseInt(r / MAXCOLUMN)
+                            let row = RowO[r_num]
+
+                            console.log("ACL AE   >" + outputelement);
+                            console.log("ACL AE-V >" + aclrule['i'][outputelement]);
+                            $('<label>' + outputelement + ':</label>', { type: "text" }).appendTo(row);
+
+                            var ACL = $('<input/>', {
+                                class: "node-input-aclrule-outputfield-" + outputelement,
+                                type: "text",
+                                style: "width:80px; margin-right:10px; background-color:#FDD0A2"
+
+                            }).appendTo(row)
+                                .typedInput({
+                                    types: ['msg', 'flow', 'global', 'str', 'num', 'bool', 'json', 'jsonata', 'bin', 'date', 'env']
+                                });
+
+
+                            ACL.typedInput('value', aclrule['o'][outputelement].p);
+                            ACL.typedInput('type', aclrule['o'][outputelement].pt);
+
+
+                            //   ACL.val(aclrule['o'][outputelement])
+                            r++
+                        }
+
+
+
+                        var newWidth = $("#node-input-aclrules-container").width();
+                        resizeRuleACL(container);
+                    },
+                    resizeItem: resizeRuleACL,
+                    removable: true,
+                    sortable: true
+                });
+
+
+
+            for (var i = 0; i < this.aclrules.length; i++) {
+                var item = this.aclrules[i];
+                $("#node-input-aclrules-container").editableList('addItem', item);
+            }
+
+
+            $('#node-input-inputfields-container')
+                .css('min-height', '150px')
+                .css('min-width', '450px')
+                .editableList({
+                    addItem: function (container, i, opt) {
+                        console.log("Index input:" + i)
+                        var inputfield = opt;
+                        if (!inputfield.hasOwnProperty('n')) {
+                            inputfield = {
+                                n: "idx-" + i,
+                                p: "payload",
+                                pt: "msg"
+                            };
+                        }
+                        container.css({
+                            overflow: 'hidden',
+                            whiteSpace: 'nowrap'
+                        });
+                        var row1 = $('<div/>', {
+                            //    style: "display:inline-block;text-align:right; width:120px; padding-right:10px; box-sizing:border-box;"
+                        }).appendTo(container);
+
+                        var NameIn = $('<input/>', {
+                            class: "node-input-inputfield-name",
+                            type: "text",
+                            style: "width:110px; margin-right:10px;"
+                        })
+                            .appendTo(row1)
+                        var propertyNameIn = $('<input/>', {
+                            class: "node-input-inputfield-property-name",
+                            type: "text",
+                            style: "width:300px; margin-right:10px;"
+
+                        })
+                            .appendTo(row1)
+                            .typedInput({
+                                types: ['msg', 'flow', 'global']
+                            });
+                        propertyNameIn.typedInput('value', inputfield.p);
+                        propertyNameIn.typedInput('type', inputfield.pt);
+                        NameIn.val(inputfield.n)
+                        var newWidth = $("#node-input-inputfields-container").width();
+                        resizeRuleIn(container);
+                        console.log("Input Display completed")
+                        UpdateACLInput();
+                        AddACLInput(inputfield)
+                        UpdateACLRules();
+                    },
+                    resizeItem: resizeRuleIn,
+                    removable: true,
+                    sortable: true,
+                    removeItem: function (data) {
+                        console.log("An item has been removed:" + data);
+                        UpdateACLInput();
+
+                    }
+
+                });
+
+            for (var i = 0; i < this.inputfields.length; i++) {
+                var item = this.inputfields[i];
+                $("#node-input-inputfields-container").editableList('addItem', item);
+            }
+
+            $('#node-input-outputfields-container')
+                .css('min-height', '150px')
+                .css('min-width', '450px')
+                .editableList({
+                    addItem: function (container, i, opt) {
+                        console.log(opt)
+                        var outputfield = opt;
+                        if (!outputfield.hasOwnProperty('n')) {
+                            outputfield = {
+                                n: "idx-" + i,
+                                p: "payload",
+                                pt: "msg"
+                            };
+                        }
+                        container.css({
+                            overflow: 'hidden',
+                            whiteSpace: 'nowrap'
+                        });
+
+
+                        var row1O = $('<div/>', {
+                            //    style: "display:inline-block;text-align:right; width:120px; padding-right:10px; box-sizing:border-box;"
+                        }).appendTo(container);
+
+                        var NameOut = $('<input/>', {
+                            class: "node-input-outputfield-name",
+                            type: "text",
+                            style: "width:110px; margin-right:10px;"
+                        })
+                            .appendTo(row1O);
+
+                        var propertyNameOut = $('<input/>', {
+                            class: "node-input-outputfield-property-name",
+                            type: "text",
+                            style: "width:140px; margin-right:10px;"
+
+                        })
+                            .appendTo(row1O)
+                            .typedInput({
+                                types: ['msg', 'flow', 'global']
+                            });
+                        propertyNameOut.typedInput('value', outputfield.p);
+                        propertyNameOut.typedInput('type', outputfield.pt);
+                        NameOut.val(outputfield.n)
+
+                        var newWidth = $("#node-input-outputfields-container").width();
+                        resizeRuleOut(container);
+                        UpdateACLOutput();
+                        AddACLOutput(outputfield)
+                        UpdateACLRules();
+
+                    },
+                    resizeItem: resizeRuleOut,
+                    removable: true,
+                    sortable: true
+                });
+            for (var i = 0; i < this.outputfields.length; i++) {
+                var item = this.outputfields[i];
+                $("#node-input-outputfields-container").editableList('addItem', item);
+            }
+            for (var i = 0; i < this.aclrules.length; i++) {
+                var item = this.aclrules[i];
+                $("#node-input-aclrules-container").editableList('addItem', item);
+            }
+        },
+
+        oneditsave: function () {
+            var node = this;
+
+            var inputfields = $("#node-input-inputfields-container").editableList("items");
+
+            node.inputfields = [];
+            inputfields.each(function (i) {
+                var inputfield = $(this);
+                var ifs = {
+                    n: inputfield.find(".node-input-inputfield-name").val(),
+                    p: inputfield.find(".node-input-inputfield-property-name").typedInput('value'),
+                    pt: inputfield.find(".node-input-inputfield-property-name").typedInput('type')
+
+                };
+                node.inputfields.push(ifs);
+            });
+
+
+            var outputfields = $("#node-input-outputfields-container").editableList("items");
+
+            node.outputfields = [];
+            outputfields.each(function (i) {
+                var outputfield = $(this);
+                var ofs = {
+                    n: outputfield.find(".node-input-outputfield-name").val(),
+                    p: outputfield.find(".node-input-outputfield-property-name").typedInput('value'),
+                    pt: outputfield.find(".node-input-outputfield-property-name").typedInput('type')
+
+                };
+                node.outputfields.push(ofs);
+            });
+
+
+            var aclrules = $("#node-input-aclrules-container").editableList("items");
+
+            node.aclrules = [];
+            aclrules.each(function (i) {
+                var aclfield = $(this);
+                var input_r = {};
+                var output_r = {};
+                for (var i = 0; i < node.inputfields.length; i++) {
+                    console.log(item)
+                    var item = node.inputfields[i];
+                    input_r[item.n] = {
+                        p: aclfield.find(".node-input-aclrule-inputfield-" + item.n).typedInput('value'),
+                        pt: aclfield.find(".node-input-aclrule-inputfield-" + item.n).typedInput('type')
+                    }
+                }
+
+                for (var i = 0; i < node.outputfields.length; i++) {
+                    console.log(item)
+                    var item = node.outputfields[i];
+                    output_r[item.n] = {
+                        p: aclfield.find(".node-input-aclrule-outputfield-" + item.n).typedInput('value'),
+                        pt: aclfield.find(".node-input-aclrule-outputfield-" + item.n).typedInput('type')
+                    }
+                }
+            
+                node.aclrules.push({ "i": input_r, "o": output_r });
+            });
+
+        },
+        oneditresize: function (size) {
+            /* var rows = $("#dialog-form>div:not(.node-input-inputfields-container-row)");
+             var height = size.height;
+             for (var i = 0; i < rows.length; i++) {
+                 height -= $(rows[i]).outerHeight(true);
+             }
+             var editorRow = $("#dialog-form>div.node-input-inputfields-container-row");
+             height -= (parseInt(editorRow.css("marginTop")) + parseInt(editorRow.css("marginBottom")));
+             height += 16;
+             $("#node-input-inputfields-container").editableList('height', height);
+             */
+        },
+
+
+    });
+</script>
