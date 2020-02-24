@@ -16,12 +16,12 @@ module.exports = function (RED) {
         if (valid) {
             this.on('input', (msg, send, done) => {
                 xlate.applyXlateRules(msg, node, (err, msg) => {
-                    console.log("Return from applyXlateRules:",err," msg:",msg)
+               //   console.log("Return from applyXlateRules:",err," msg:",msg)
                     if (err) {
-                        console.log("applyXlateRules return error")
+                 //       console.log("applyXlateRules return error")
                         done(err);
                     } else if (msg) {
-                        console.log("applyXlateRules return msg")
+                  //      console.log("applyXlateRules return msg")
                         send(msg);
                         done();
                     }

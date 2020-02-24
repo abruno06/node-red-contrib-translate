@@ -1,16 +1,20 @@
+var loaded  =false;
+var debug = false;
 module.exports = function (RED) {
     "use strict";
     //var path = require("path");
 
     // This module is highly inspired from node-red 'change' node
 
-
+if (!loaded){
+    loaded=true;
+    load(RED.settings);
+}
 
     // [
     //     {
     //         "id": "71531ff6.61c188",
     //         "type": "translate",
-
     //         "inputfields": [
     //             {
     //                 "n": "idx-1",
@@ -87,7 +91,7 @@ module.exports = function (RED) {
         let inputValue;
         let inputType;
         let r = {};
-        console.log("start getInputValue on:", rule, " msg:", msg);
+        if (debug) console.log("start getInputValue on:", rule, " msg:", msg);
         var inputName = rule.n;
         if (rule.pt === 'msg' || rule.pt === 'flow' || rule.pt === 'global') {
             if (rule.pt === "msg") {
@@ -97,7 +101,7 @@ module.exports = function (RED) {
                     inputType,
                     inputValue
                 }
-                console.log("getInputValue return #1:", r);
+                if (debug) console.log("getInputValue return #1:", r);
                 done(null, r);
             } else if (rule.pt === 'flow' || rule.pt === 'global') {
                 var contextKey = RED.util.parseContextStore(rule.p);
@@ -105,13 +109,13 @@ module.exports = function (RED) {
                     if (err) {
                         done(err)
                     } else {
-                        console.log("getInputValue look for type for ", inputValue);
+                        if (debug) console.log("getInputValue look for type for ", inputValue);
                         inputType = rule.pt;
                         r[inputName] = {
                             inputType,
                             inputValue
                         }
-                        console.log("getInputValue return #2:", r);
+                        if (debug) console.log("getInputValue return #2:", r);
                         done(null, r);
                     }
                 });
@@ -122,15 +126,15 @@ module.exports = function (RED) {
 
 
     function completeVectorFound(msg, node, currentElement, vector, done) {
-        console.log("start completeVectorFound on:", currentElement, " vector:", vector);
+        if (debug) console.log("start completeVectorFound on:", currentElement, " vector:", vector);
         if (!msg) {
-            console.log("completeVectorFound stop as no msg");
+            if (debug) console.log("completeVectorFound stop as no msg");
             return done();
         } else if (currentElement === node.inputfields.length - 1) {
-            console.log("completeVectorFound stop as reach last element");
+            if (debug) console.log("completeVectorFound stop as reach last element");
             return done(undefined, vector);
         } else {
-            console.log("completeVectorFound need to look deeper");
+            if (debug) console.log("completeVectorFound need to look deeper");
             getInputElement(msg, node, currentElement + 1, vector, done);
         }
     }
@@ -138,33 +142,33 @@ module.exports = function (RED) {
 
     function getInputElement(msg, node, currentElement, vector, done) {
         //  getInputValue(msg,rule, done)
-        console.log("start getInputElement on:", currentElement, " vector:", vector);
+        if (debug) console.log("start getInputElement on:", currentElement, " vector:", vector);
         if (currentElement >= node.inputfields.length) {
             return done(null, vector);
         }
         let v = node.inputfields[currentElement]
-        console.log("getInputElement v:", v);
+        if (debug) console.log("getInputElement v:", v);
         getInputValue(msg, v, (err, vectorelement) => {
             vector = {
                 ...vector,
                 ...vectorelement
             };
-            console.log("getInputElement determine if completed. vector is ", vector);
+            if (debug) console.log("getInputElement determine if completed. vector is ", vector);
             completeVectorFound(msg, node, currentElement, vector, done)
         })
     }
 
     function extractInputVector(msg, node, done) {
-        console.log("start extractInputVector");
+        if (debug) console.log("start extractInputVector");
         if (!msg) {
-            console.log("extractInputVector end due to empty msg");
+            if (debug) console.log("extractInputVector end due to empty msg");
             return done();
         } else if (!node.inputfields) {
-            console.log("extractInputVector end due to no inputfield");
+            if (debug) console.log("extractInputVector end due to no inputfield");
             return done();
         } else {
             getInputElement(msg, node, 0, {}, (err, vector) => {
-                console.log("extractInputVector end with vector:", vector);
+                if (debug) console.log("extractInputVector end with vector:", vector);
                 done(undefined, vector, msg)
             })
         }
@@ -173,7 +177,7 @@ module.exports = function (RED) {
     /// ACL piece
     function lookForMatch(inputvector, rule, done) {
 
-        console.log("start lookForMatch on:", rule, " inputvector:", inputvector);
+        if (debug) console.log("start lookForMatch on:", rule, " inputvector:", inputvector);
 
         if (!rule.i) {
             return done();
@@ -181,28 +185,28 @@ module.exports = function (RED) {
         let isMatching = true
         let out = rule.o
         for (const e in rule.i) {
-            console.log("lookForMatch:", e);
+            if (debug) console.log("lookForMatch:", e);
             let re = rule.i[e].p;
 
             let valObj = inputvector[e];
             let val = "";
             if (valObj && valObj.inputValue) val = valObj.inputValue;
-            console.log("lookForMatch: re:", re, " compare:", val);
+            if (debug) console.log("lookForMatch: re:", re, " compare:", val);
             let result = true;
             if (val.match(re) === null) result = false
             isMatching &= result;
-            console.log("lookForMatch results:", result);
+            if (debug) console.log("lookForMatch results:", result);
             if (!isMatching) {
                 break;
             }
         }
 
-        console.log("lookForMatch final result:", isMatching);
+        if (debug) console.log("lookForMatch final result:", isMatching);
         if (isMatching) {
-            console.log("lookForMatch have a match");
+            if (debug) console.log("lookForMatch have a match");
             return done(undefined, out)
         } else {
-            console.log("lookForMatch no match");
+            if (debug) console.log("lookForMatch no match");
             return done();
         }
     }
@@ -211,14 +215,14 @@ module.exports = function (RED) {
 
     function processACLRule(inputvector, node, currentElement, vector, done) {
         //  getInputValue(msg,rule, done)
-        console.log("start processACLRule on:", currentElement, " vector:", vector);
+        if (debug) console.log("start processACLRule on:", currentElement, " vector:", vector);
         if (currentElement >= node.aclrules.length) {
             return done(undefined, vector);
         }
 
 
         let v = node.aclrules[currentElement]
-        console.log("processACLRule v:", v);
+        if (debug) console.log("processACLRule v:", v);
         lookForMatch(inputvector, v, (err, vectorelement) => {
             completeMatchFound(inputvector, node, currentElement, vectorelement, done)
         })
@@ -227,37 +231,37 @@ module.exports = function (RED) {
     }
 
     function completeMatchFound(inputvector, node, currentElement, vector, done) {
-        console.log("start completeMatchFound on:", currentElement, " vector:", vector);
+        if (debug) console.log("start completeMatchFound on:", currentElement, " vector:", vector);
         if (!inputvector) {
-            console.log("completeMatchFound no inputvector");
+            if (debug) console.log("completeMatchFound no inputvector");
             return done();
         } else if (vector) {
-            console.log("completeMatchFound one match found");
+            if (debug) console.log("completeMatchFound one match found");
             return done(undefined, vector);
         } else if (currentElement === node.aclrules.length - 1) {
-            console.log("completeMatchFound last acl rule");
+            if (debug) console.log("completeMatchFound last acl rule");
             return done(undefined, vector);
         } else {
-            console.log("completeMatchFound need to search another rule");
+            if (debug) console.log("completeMatchFound need to search another rule");
             processACLRule(inputvector, node, currentElement + 1, vector, done);
         }
     }
 
 
     function searchMatchingRule(msg, node, inputvector, done) {
-        console.log("start searchMatchingRule");
+        if (debug) console.log("start searchMatchingRule");
         if (!msg) {
-            console.log("searchMatchingRule no message")
+            if (debug) console.log("searchMatchingRule no message")
             return done();
         } else if (!node.aclrules) {
-            console.log("searchMatchingRule no acl rule")
+            if (debug) console.log("searchMatchingRule no acl rule")
             return done();
         } else if (!inputvector) {
-            console.log("searchMatchingRule no inputvector");
+            if (debug) console.log("searchMatchingRule no inputvector");
             return done();
         } else {
             processACLRule(inputvector, node, 0, undefined, (err, vector) => {
-                console.log("searchMatchingRule result: ", vector)
+                if (debug) console.log("searchMatchingRule result: ", vector)
                 done(null, vector, msg)
             })
         }
@@ -269,22 +273,22 @@ module.exports = function (RED) {
     //OUTPUT
 
     function applyOutputXlate(msg, node, outputrule, done) {
-        console.log("start applyOutputXlate with ouputrule", outputrule);
+        if (debug) console.log("start applyOutputXlate with ouputrule", outputrule);
         if (!msg) {
-            console.log("applyOutputXlate no message")
+            if (debug) console.log("applyOutputXlate no message")
             return done();
         } else if (!node.outputfields) {
-            console.log("applyOutputXlate no output")
+            if (debug) console.log("applyOutputXlate no output")
             return done();
         } else if (!outputrule) {
-            console.log("applyOutputXlate no inputvector");
+            if (debug) console.log("applyOutputXlate no inputvector");
             return done();
         } else {
 
             let outputvector = {};
 
             for (let i of node.outputfields) {
-                console.log("index", i);
+                if (debug) console.log("index", i);
                 outputvector[i.n] = {
                     to: i.p,
                     tot: i.pt,
@@ -292,7 +296,7 @@ module.exports = function (RED) {
                     pt: outputrule[i.n].pt
                 }
             }
-            console.log("applyOutputXlate outputvector", outputvector);
+            if (debug) console.log("applyOutputXlate outputvector", outputvector);
             processOutputRule(msg, node, 0, outputvector, (err, msg) => {
                 done(null, msg)
             })
@@ -303,13 +307,13 @@ module.exports = function (RED) {
 
     function processOutputRule(msg, node, currentElement, outputvector, done) {
         //  getInputValue(msg,rule, done)
-        console.log("start processOutputRule on:", currentElement, " vector:", outputvector);
+        if (debug) console.log("start processOutputRule on:", currentElement, " vector:", outputvector);
         if (currentElement >= node.outputfields.length) {
             return done(undefined, msg);
         }
         let v = node.outputfields[currentElement];
         let xlate = outputvector[v.n];
-        console.log("processOutputRule v:", v, " xlate:", xlate);
+        if (debug) console.log("processOutputRule v:", v, " xlate:", xlate);
         getACLOutputValue(msg, xlate, (err, value) => {
             if (xlate.tot === 'msg') {
                 try {
@@ -338,15 +342,15 @@ module.exports = function (RED) {
 
 
     function completeOutputRules(msg, node, currentElement, vector, done) {
-        console.log("start completeOutputRules on:", currentElement, " vector:", vector);
+        if (debug) console.log("start completeOutputRules on:", currentElement, " vector:", vector);
         if (!msg) {
-            console.log("completeOutputRules stop as no msg");
+            if (debug) console.log("completeOutputRules stop as no msg");
             return done();
         } else if (currentElement === node.outputfields.length - 1) {
-            console.log("completeOutputRules stop as reach last element");
+            if (debug) console.log("completeOutputRules stop as reach last element");
             return done(undefined, msg);
         } else {
-            console.log("completeOutputRules need to look deeper");
+            if (debug) console.log("completeOutputRules need to look deeper");
             processOutputRule(msg, node, currentElement + 1, vector, done);
         }
     }
@@ -391,32 +395,41 @@ module.exports = function (RED) {
 
     // MAIN
     function applyXlateRules(msg, node, done) {
-        console.log("applyXlateRules Start");
+        if (debug) console.log("applyXlateRules Start");
         extractInputVector(msg, node, (err, inputvector, msg) => {
-            console.log("applyXlateRules inputvector:", inputvector);
+            if (debug) console.log("applyXlateRules inputvector:", inputvector);
             searchMatchingRule(msg, node, inputvector, (err, outputrule, msg) => {
                 if (err) {
-                    console.log("applyXlateRules, Some Error", err)
+                    if (debug) console.log("applyXlateRules, Some Error", err)
                 } else {
                     if (outputrule) {
-                        console.log("applyXlateRules match ", outputrule)
+                        if (debug) console.log("applyXlateRules match ", outputrule)
                         applyOutputXlate(msg, node, outputrule, (err, msg) => {
-                            console.log("applyXlateRules compute message ", msg)
+                            if (debug) console.log("applyXlateRules compute message ", msg)
                             done(null, msg);
                         });
 
                     } else {
-                        console.log("applyXlateRules no match")
+                        if (debug) console.log("applyXlateRules no match")
                         done(null, msg)
                     }
 
 
                 }
             })
-
+ 
         })
 
     }
+
+    function load(settings){
+        let xlateSettings = settings.translate || {};
+        if (xlateSettings.hasOwnProperty("debug")&& (typeof xlateSettings.debug === "boolean"))
+        {
+            debug = xlateSettings.debug;
+        }
+    }
+
     return {
         applyXlateRules: applyXlateRules
     }
