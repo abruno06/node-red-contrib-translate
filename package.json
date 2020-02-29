@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-translate",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "This is a NodeRed Node that is able to make translation between set of Input elements and set of Output elements using kind of ACL rules",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
