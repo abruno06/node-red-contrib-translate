@@ -10,9 +10,9 @@
         <ol id="node-input-rule-container"></ol>
     </div>
     <div class="form-row">
-		<ul style="background: #fff; min-width: 1000px; margin-bottom: 20px;" id="node-translate-tabs"></ul>
+        <ul style="background: #fff; min-width: 1000px; margin-bottom: 20px;" id="node-translate-tabs"></ul>
     </div>
-    
+
     <div id="node-translate-tabs-content" style="min-height: 180px;">
         <div id="translate-tab-inputfields" style="display:none">
             <div class="form-row node-input-inputfields-container-row">
@@ -109,13 +109,19 @@
             }
 
             function GenerateRule() {
-                let rule = { "i": {}, "o": {} };
+                let rule = {
+                    "i": {},
+                    "o": {}
+                };
                 for (var i = 0; i < node.inputfields.length; i++) {
                     let inputfield = node.inputfields[i]
                     let r_name = inputfield.n
                     console.log("GR:Add " + r_name + " on all ACL")
                     if (!(r_name in rule["i"])) {
-                        rule["i"][r_name] = { p: ".*", pt: "re" };
+                        rule["i"][r_name] = {
+                            p: ".*",
+                            pt: "re"
+                        };
                         console.log("GR:Create " + r_name + " with " + rule["i"][r_name])
                     }
 
@@ -126,7 +132,10 @@
                     let r_name = outputfield.n
                     console.log("GR:Add " + r_name + " on all ACL")
                     if (!(r_name in rule["o"])) {
-                        rule["o"][r_name] = { p: "payload", pt: "msg" };
+                        rule["o"][r_name] = {
+                            p: "payload",
+                            pt: "msg"
+                        };
                         console.log("GR:Create " + r_name + " with " + rule["o"][r_name])
                     }
 
@@ -154,7 +163,10 @@
                         }
 
                         if (!(node.aclrules[j]["i"].hasOwnProperty(r_name))) {
-                            node.aclrules[j]["i"][r_name] = { p: ".*", pt: "re" };
+                            node.aclrules[j]["i"][r_name] = {
+                                p: ".*",
+                                pt: "re"
+                            };
                             console.log("UACLI:add " + r_name + " to " + j)
                         }
                         console.log("UACLI:R+" + j + ":" + JSON.stringify(node.aclrules[j]["i"]))
@@ -192,7 +204,10 @@
                         console.log("AACLI:Add input rule")
                     }
                     if (!(node.aclrules[j]["i"].hasOwnProperty(item.n))) {
-                        node.aclrules[j]["i"][item.n] = { p: ".*", pt: "re" };
+                        node.aclrules[j]["i"][item.n] = {
+                            p: ".*",
+                            pt: "re"
+                        };
                         console.log("AACLI:add " + item.n + " to " + j)
                     }
                     console.log("AACLI:R+" + j + ":" + JSON.stringify(node.aclrules[j]["i"]))
@@ -221,7 +236,10 @@
                         }
 
                         if (!(node.aclrules[j]["o"].hasOwnProperty(r_name))) {
-                            node.aclrules[j]["o"][r_name] = { p: "payload", pt: "msg" };
+                            node.aclrules[j]["o"][r_name] = {
+                                p: "payload",
+                                pt: "msg"
+                            };
                             console.log("UACLO:add " + r_name + " to " + j)
                         }
                         console.log("UACLO:R+" + j + ":" + JSON.stringify(node.aclrules[j]["o"]))
@@ -260,7 +278,10 @@
                     }
 
                     if (!(node.aclrules[j]["o"].hasOwnProperty(item.n))) {
-                        node.aclrules[j]["o"][item.n] = { p: "payload", pt: "msg" };
+                        node.aclrules[j]["o"][item.n] = {
+                            p: "payload",
+                            pt: "msg"
+                        };
                         console.log("AACLO:add " + item.n + " to " + j)
                     }
                     console.log("AACLO:R+" + j + ":" + JSON.stringify(node.aclrules[j]["o"]))
@@ -307,6 +328,7 @@
                 elementIn.find('.red-ui-typedInput').typedInput("width", newWidth - 130);
 
             }
+
             function resizeRuleOut(elementOut) {
                 var newWidth = elementOut.width();
                 console.log(elementOut)
@@ -377,13 +399,15 @@
                             let row = RowI[r_num];
                             console.log("ACL AE   >" + inputelement);
                             console.log("ACL AE-V >" + aclrule['i'][inputelement]);
-                            $('<label>' + inputelement + ':</label>', { type: "text" }).appendTo(row);
+                            $('<label>' + inputelement + ':</label>', {
+                                type: "text"
+                            }).appendTo(row);
                             var ACL = $('<input/>', {
-                                class: "node-input-aclrule-inputfield-" + inputelement,
-                                type: "text",
-                                style: "width:80px; margin-right:10px; background-color:#C0DEED"
+                                    class: "node-input-aclrule-inputfield-" + inputelement,
+                                    type: "text",
+                                    style: "width:80px; margin-right:10px; background-color:#C0DEED"
 
-                            }).appendTo(row)
+                                }).appendTo(row)
                                 .typedInput({
                                     types: ['re']
                                 });
@@ -402,16 +426,20 @@
 
                             console.log("ACL AE   >" + outputelement);
                             console.log("ACL AE-V >" + aclrule['i'][outputelement]);
-                            $('<label>' + outputelement + ':</label>', { type: "text" }).appendTo(row);
+                            $('<label>' + outputelement + ':</label>', {
+                                type: "text"
+                            }).appendTo(row);
 
                             var ACL = $('<input/>', {
-                                class: "node-input-aclrule-outputfield-" + outputelement,
-                                type: "text",
-                                style: "width:80px; margin-right:10px; background-color:#FDD0A2"
+                                    class: "node-input-aclrule-outputfield-" + outputelement,
+                                    type: "text",
+                                    style: "width:80px; margin-right:10px; background-color:#FDD0A2"
 
-                            }).appendTo(row)
+                                }).appendTo(row)
                                 .typedInput({
-                                    types: ['msg', 'flow', 'global', 'str', 'num', 'bool', 'json', 'jsonata', 'bin', 'date', 'env']
+                                    types: ['msg', 'flow', 'global', 'str', 'num', 'bool',
+                                        'json', 'jsonata', 'bin', 'date', 'env'
+                                    ]
                                 });
 
 
@@ -464,17 +492,17 @@
                         }).appendTo(container);
 
                         var NameIn = $('<input/>', {
-                            class: "node-input-inputfield-name",
-                            type: "text",
-                            style: "width:110px; margin-right:10px;"
-                        })
+                                class: "node-input-inputfield-name",
+                                type: "text",
+                                style: "width:110px; margin-right:10px;"
+                            })
                             .appendTo(row1)
                         var propertyNameIn = $('<input/>', {
-                            class: "node-input-inputfield-property-name",
-                            type: "text",
-                            style: "width:300px; margin-right:10px;"
+                                class: "node-input-inputfield-property-name",
+                                type: "text",
+                                style: "width:300px; margin-right:10px;"
 
-                        })
+                            })
                             .appendTo(row1)
                             .typedInput({
                                 types: ['msg', 'flow', 'global']
@@ -530,18 +558,18 @@
                         }).appendTo(container);
 
                         var NameOut = $('<input/>', {
-                            class: "node-input-outputfield-name",
-                            type: "text",
-                            style: "width:110px; margin-right:10px;"
-                        })
+                                class: "node-input-outputfield-name",
+                                type: "text",
+                                style: "width:110px; margin-right:10px;"
+                            })
                             .appendTo(row1O);
 
                         var propertyNameOut = $('<input/>', {
-                            class: "node-input-outputfield-property-name",
-                            type: "text",
-                            style: "width:140px; margin-right:10px;"
+                                class: "node-input-outputfield-property-name",
+                                type: "text",
+                                style: "width:140px; margin-right:10px;"
 
-                        })
+                            })
                             .appendTo(row1O)
                             .typedInput({
                                 types: ['msg', 'flow', 'global']
@@ -581,8 +609,10 @@
                 var inputfield = $(this);
                 var ifs = {
                     n: inputfield.find(".node-input-inputfield-name").val(),
-                    p: inputfield.find(".node-input-inputfield-property-name").typedInput('value'),
-                    pt: inputfield.find(".node-input-inputfield-property-name").typedInput('type')
+                    p: inputfield.find(".node-input-inputfield-property-name").typedInput(
+                        'value'),
+                    pt: inputfield.find(".node-input-inputfield-property-name").typedInput(
+                        'type')
 
                 };
                 node.inputfields.push(ifs);
@@ -596,8 +626,10 @@
                 var outputfield = $(this);
                 var ofs = {
                     n: outputfield.find(".node-input-outputfield-name").val(),
-                    p: outputfield.find(".node-input-outputfield-property-name").typedInput('value'),
-                    pt: outputfield.find(".node-input-outputfield-property-name").typedInput('type')
+                    p: outputfield.find(".node-input-outputfield-property-name").typedInput(
+                        'value'),
+                    pt: outputfield.find(".node-input-outputfield-property-name").typedInput(
+                        'type')
 
                 };
                 node.outputfields.push(ofs);
@@ -615,8 +647,10 @@
                     console.log(item)
                     var item = node.inputfields[i];
                     input_r[item.n] = {
-                        p: aclfield.find(".node-input-aclrule-inputfield-" + item.n).typedInput('value'),
-                        pt: aclfield.find(".node-input-aclrule-inputfield-" + item.n).typedInput('type')
+                        p: aclfield.find(".node-input-aclrule-inputfield-" + item.n).typedInput(
+                            'value'),
+                        pt: aclfield.find(".node-input-aclrule-inputfield-" + item.n)
+                            .typedInput('type')
                     }
                 }
 
@@ -624,12 +658,17 @@
                     console.log(item)
                     var item = node.outputfields[i];
                     output_r[item.n] = {
-                        p: aclfield.find(".node-input-aclrule-outputfield-" + item.n).typedInput('value'),
-                        pt: aclfield.find(".node-input-aclrule-outputfield-" + item.n).typedInput('type')
+                        p: aclfield.find(".node-input-aclrule-outputfield-" + item.n)
+                            .typedInput('value'),
+                        pt: aclfield.find(".node-input-aclrule-outputfield-" + item.n)
+                            .typedInput('type')
                     }
                 }
-            
-                node.aclrules.push({ "i": input_r, "o": output_r });
+
+                node.aclrules.push({
+                    "i": input_r,
+                    "o": output_r
+                });
             });
 
         },
@@ -648,4 +687,39 @@
 
 
     });
+</script>
+
+<script type="text/x-red" data-help-name="translate">
+<p>This node allow to filter output information (msg,flow or global) using set of rules based on input information
+    (<code>msg</code>,<code>flow</code> or <code>global</code>) </p>
+<h3>Inputs</h3>
+<ol class="node-ports">
+    <li>Standard input
+        <dl class="message-properties">
+            The input message is process using input elements, that could be either <code>msg</code> fields or element
+            from <code>flow</code> or <code>global</code> context
+        </dl>
+    </li>
+</ol>
+<h3>Outputs</h3>
+<ol class="node-ports">
+    <li>Standard output
+        <dl class="message-properties">
+            The output message <code>msg</code> could be modified by the node depending of the rules been applied
+        </dl>
+    </li>
+</ol>
+<h3>Translation rules</h3>
+<ol class="node-ports">
+    <li>Translation rules
+        <dl class="message-properties">
+            <dt>The translation rules are designed as first match been selected</dt>
+            <dd>the input elements are compared against regular expressions for the match empty value are replaced by an empty string<code>""</code></dd>
+        </dl>
+    </li>
+</ol>
+
+<h3>Details</h3>
+<p>The overall processing can be seen as a kind of DMN</p>
+
 </script>
