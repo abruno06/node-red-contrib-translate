@@ -96,7 +96,7 @@
              var regex = this._("translate.label.regex");
  */
             var node = this;
-            const MAXCOLUMN = 2;
+            const MAXCOLUMN = 1;
 
             function UpdateACLRules() {
                 $("#node-input-aclrules-container").editableList('empty')
@@ -174,7 +174,7 @@
                     }
                 }
                 console.log("Delete extra key if Any")
-                console.log("Valide Keys")
+                console.log("Valid Keys")
                 console.log(InputFields)
 
                 for (var j = 0; j < node.aclrules.length; j++) {
@@ -358,10 +358,14 @@
                             aclrule = GenerateRule()
 
                         }
-
                         container.css({
                             overflow: 'hidden',
-                            whiteSpace: 'nowrap'
+                            whiteSpace: 'nowrap',
+                            'border-color': 'blueviolet',
+                            'border-width': 'thin',
+                            'border-style': 'dashed',
+                            'margin-bottom': '5px',
+                            'margin-top': '5px'
                         });
 
                         console.log("ACL");
@@ -377,13 +381,19 @@
 
                         let RowI = [];
                         let RowO = [];
+                        $('<label><strong>Input:</strong></label>', {
+                            type: "text"
+                        }).appendTo(container);
                         for (i = 0; i < n_rowI; i++) {
                             let row = $('<div/>', {
                                 //    style: "display:inline-block;text-align:right; width:120px; padding-right:10px; box-sizing:border-box;"
                             }).appendTo(container);
                             RowI.push(row);
                         }
-
+                        $('<div/><hr/>', {}).appendTo(container);
+                        $('<label><strong>Output:</strong></label>', {
+                            type: "text"
+                        }).appendTo(container);
                         for (i = 0; i < n_rowO; i++) {
                             let row = $('<div/>', {
                                 //    style: "display:inline-block;text-align:right; width:120px; padding-right:10px; box-sizing:border-box;"
@@ -690,7 +700,7 @@
 </script>
 
 <script type="text/x-red" data-help-name="translate">
-<p>This node allow to filter output information (<code>msg</code>,<code>flow</code> or <code>global</code>) using set of rules based on input information
+    <p>This node allow to filter output information (<code>msg</code>,<code>flow</code> or <code>global</code>) using set of rules based on input information
     (<code>msg</code>,<code>flow</code> or <code>global</code>) </p>
 <h3>Inputs</h3>
 <ol class="node-ports">
