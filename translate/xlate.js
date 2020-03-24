@@ -378,6 +378,12 @@ if (!loaded){
         } else if (xlate.pt === 'date') {
             value = Date.now();
         } else if (xlate.pt === 'jsonata') {
+            // Prepare the jsonata engine
+            try {
+                xlate.p = RED.util.prepareJSONataExpression(xlate.p,this);
+            } catch(e) {
+                this.error(RED._("change.errors.invalid-expr",{error:e.message}));
+            }
             RED.util.evaluateJSONataExpression(xlate.p, msg, (err, value) => {
                 if (err) {
                     done(RED._("change.errors.invalid-expr", {
