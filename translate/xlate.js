@@ -102,6 +102,7 @@ if (!loaded){
                     inputValue
                 }
                 if (debug) console.log("getInputValue return #1:", r);
+                RED.util.setMessageProperty(msg,"_xlate."+inputName,inputValue);
                 done(null, r);
             } else if (rule.pt === 'flow' || rule.pt === 'global') {
                 var contextKey = RED.util.parseContextStore(rule.p);
@@ -116,6 +117,7 @@ if (!loaded){
                             inputValue
                         }
                         if (debug) console.log("getInputValue return #2:", r);
+                        RED.util.setMessageProperty(msg,"_xlate."+inputName,inputValue);
                         done(null, r);
                     }
                 });
