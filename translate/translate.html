@@ -40,15 +40,15 @@
             name: {
                 value: ""
             },
-            rulfes: {
-                value: [{
-                    t: "set",
-                    p: "payload",
-                    pt: "msg",
-                    to: "",
-                    tot: "str"
-                }]
-            },
+            /*  rulfes: {
+                  value: [{
+                      t: "set",
+                      p: "payload",
+                      pt: "msg",
+                      to: "",
+                      tot: "str"
+                  }]
+              },*/
             // legacy
             action: {
                 value: ""
@@ -98,12 +98,15 @@
             var node = this;
             const MAXCOLUMN = 1;
 
+            function RulesACLchange() {
+                UpdateACLRules;
+            }
+
             function UpdateACLRules() {
+                console.log("Add ACL after input/output built")
                 $("#node-input-aclrules-container").editableList('empty')
 
-                for (var j = 0; j < node.aclrules.length; j++) {
-                    var item = node.aclrules[j];
-
+                for (const item of node.aclrules) {
                     $("#node-input-aclrules-container").editableList('addItem', item);
                 }
             }
@@ -143,129 +146,170 @@
                 return rule;
             }
 
+
+            function buildACLUI(rules, part) {
+                console.log("buildACLUI:")
+                console.log(rules)
+                let Fields = [];
+                for (const e of rules) {
+                    Fields.push(e.n); //Add Valid Input Field in the list
+                }
+
+                console.log("buildACLUI:Valid Keys")
+                console.log(Fields)
+                console.log("buildACLUI:Update ACLRules with rules keys")
+                let newaclrules = [];
+                for (const rule of node.aclrules) {
+                    //  console.log("UACLI:R-" + j + ":" + JSON.stringify(node.aclrules[j]))
+                    let newRules = {};
+                    for (const _r of Fields) {
+                        if (rule[part][_r]) {
+                            newRules[_r] = rule[part][_r];
+                        } else {
+                            console.log("buildACLUI: new element" + _r);
+                            newRules[_r] = {
+                                p: ".*",
+                                "pt": "re"
+                            }
+                        }
+                        console.log("buildACLUI:add " + _r);
+                        console.log(newRules[_r]);
+
+                    }
+                    if (part === "i") {
+                        newaclrules.push({
+                            "i": newRules,
+                            "o": rule.o
+                        })
+                    } else {
+                        newaclrules.push({
+                            "i": rule.i,
+                            "o": newRules
+                        })
+                    }
+                }
+                node.aclrules = newaclrules;
+
+
+
+            }
+
             function UpdateACLInput() {
+
+                buildACLUI(node.inputfields, "i");
+                /*
                 console.log("UACLI:")
                 console.log(node.aclrules)
-                let InputFields = []
-                for (var i = 0; i < node.inputfields.length; i++) {
-                    let inputfield = node.inputfields[i]
-                    let r_name = inputfield.n
-                    InputFields.push(r_name)
-                    console.log("UACLI:Add " + r_name + " on all ACL")
-
-                    for (var j = 0; j < node.aclrules.length; j++) {
-                        //  var item = this.aclrules[i];
-
-                        console.log("UACLI:R-" + j + ":" + JSON.stringify(node.aclrules[j]["i"]))
-                        if (!(node.aclrules[j].hasOwnProperty("i"))) {
-                            node.aclrules[j]['i'] = {};
-                            console.log("UACLI:Add input rule")
-                        }
-
-                        if (!(node.aclrules[j]["i"].hasOwnProperty(r_name))) {
-                            node.aclrules[j]["i"][r_name] = {
-                                p: ".*",
-                                pt: "re"
-                            };
-                            console.log("UACLI:add " + r_name + " to " + j)
-                        }
-                        console.log("UACLI:R+" + j + ":" + JSON.stringify(node.aclrules[j]["i"]))
-                        console.log("Input Rules:" + JSON.stringify(node.aclrules[j]["i"]))
-                    }
+                let InputFields = [];
+                for (const e of node.inputfields) {
+                    InputFields.push(e.n); //Add Valid Input Field in the list
                 }
-                console.log("Delete extra key if Any")
-                console.log("Valid Keys")
+
+                console.log("UpdateACLInput:Valid Keys")
                 console.log(InputFields)
-
-                for (var j = 0; j < node.aclrules.length; j++) {
+                console.log("UpdateACLInput:Update ACLRules with input keys")
+                let newaclrules = [];
+                for (const rule of node.aclrules) {
                     //  console.log("UACLI:R-" + j + ":" + JSON.stringify(node.aclrules[j]))
-                    for (var r_n in node.aclrules[j]["i"]) {
-                        //   console.log(InputFields.indexOf(r_n))
-                        if (InputFields.indexOf(r_n) === -1) {
-                            delete node.aclrules[j]["i"][r_n];
-                            console.log("UACLI:delete " + r_n + " to " + j)
+                    let newInputRules = {};
+                    for (const i_r of InputFields) {
+                        if (rule.i[i_r]) {
+                            newInputRules[i_r] = rule.i[i_r];
+                        } else {
+                            console.log("UpdateACLInput: new element" + i_r);
+                            newInputRules[i_r] = {
+                                p: ".*",
+                                "pt": "re"
+                            }
                         }
+                        console.log("UpdateACLInput:add " + i_r);
+                        console.log(newInputRules[i_r]);
 
                     }
+                    newaclrules.push({
+                        "i": newInputRules,
+                        "o": rule.o
+                    })
                 }
+                node.aclrules = newaclrules;
+*/
+
 
             }
 
 
 
             function AddACLInput(item) {
-                console.log("AACLI:")
-                console.log(item)
-                for (var j = 0; j < node.aclrules.length; j++) {
-                    //  var item = this.aclrules[i];
-                    console.log("AACLI:R-" + j + ":" + JSON.stringify(node.aclrules[j]["i"]))
-                    if (!(node.aclrules[j].hasOwnProperty("i"))) {
-                        node.aclrules[j]['i'] = {};
-                        console.log("AACLI:Add input rule")
-                    }
-                    if (!(node.aclrules[j]["i"].hasOwnProperty(item.n))) {
-                        node.aclrules[j]["i"][item.n] = {
-                            p: ".*",
-                            pt: "re"
-                        };
-                        console.log("AACLI:add " + item.n + " to " + j)
-                    }
-                    console.log("AACLI:R+" + j + ":" + JSON.stringify(node.aclrules[j]["i"]))
-                    console.log("Input Rules:" + JSON.stringify(node.aclrules[j]["i"]))
-                }
+
+                let inputfields = node.inputfields;
+                //  inputfields.push(item)
+                console.log("AddACLInput:" + JSON.stringify(item))
+                //  buildACLUI(inputfields,"i");
+
+                /* console.log("AACLI:")
+                 console.log(item)
+                 for (var j = 0; j < node.aclrules.length; j++) {
+                     //  var item = this.aclrules[i];
+                     console.log("AACLI:R-" + j + ":" + JSON.stringify(node.aclrules[j]["i"]))
+                     if (!(node.aclrules[j].hasOwnProperty("i"))) {
+                         node.aclrules[j]['i'] = {};
+                         console.log("AACLI:Add input rule")
+                     }
+                     if (!(node.aclrules[j]["i"].hasOwnProperty(item.n))) {
+                         node.aclrules[j]["i"][item.n] = {
+                             p: ".*",
+                             pt: "re"
+                         };
+                         console.log("AACLI:add " + item.n + " to " + j)
+                     }
+                     console.log("AACLI:R+" + j + ":" + JSON.stringify(node.aclrules[j]["i"]))
+                     console.log("Input Rules:" + JSON.stringify(node.aclrules[j]["i"]))
+                 }
+                 */
             }
 
             // output
             function UpdateACLOutput() {
-                console.log("UACLO:")
-                console.log(node.aclrules)
-                let OutputFields = []
-                for (var i = 0; i < node.outputfields.length; i++) {
-                    let outputfield = node.outputfields[i]
-                    let r_name = outputfield.n
-                    OutputFields.push(r_name)
-                    console.log("UACLO:Add " + r_name + " on all ACL")
-
-                    for (var j = 0; j < node.aclrules.length; j++) {
-                        //  var item = this.aclrules[i];
-
-                        console.log("UACLI:R-" + j + ":" + JSON.stringify(node.aclrules[j]["o"]))
-                        if (!(node.aclrules[j].hasOwnProperty("o"))) {
-                            node.aclrules[j]['o'] = {};
-                            console.log("UACLO:Add output rule")
-                        }
-
-                        if (!(node.aclrules[j]["o"].hasOwnProperty(r_name))) {
-                            node.aclrules[j]["o"][r_name] = {
-                                p: "payload",
-                                pt: "msg"
-                            };
-                            console.log("UACLO:add " + r_name + " to " + j)
-                        }
-                        console.log("UACLO:R+" + j + ":" + JSON.stringify(node.aclrules[j]["o"]))
-                        console.log("Output Rules:" + JSON.stringify(node.aclrules[j]["o"]))
-                    }
+                let OutputFields = [];
+                for (const e of node.outputfields) {
+                    OutputFields.push(e.n); //Add Valid Input Field in the list
                 }
-                console.log("Delete extra key if Any")
-                console.log("Valid Keys")
+
+                console.log("UpdateACLOutput: Valid Keys")
                 console.log(OutputFields)
-
-                for (var j = 0; j < node.aclrules.length; j++) {
-                    for (var r_n in node.aclrules[j]["o"]) {
-                        if (OutputFields.indexOf(r_n) === -1) {
-                            delete node.aclrules[j]["o"][r_n];
-                            console.log("UACLO:delete " + r_n + " to " + j)
+                console.log("UpdateACLOutput: Update ACLRules with output value")
+                let newaclrules = [];
+                for (const rule of node.aclrules) {
+                    //  console.log("UACLI:R-" + j + ":" + JSON.stringify(node.aclrules[j]))
+                    let newOutputRules = {};
+                    for (const o_r of OutputFields) {
+                        if (rule.o[o_r]) {
+                            newOutputRules[o_r] = rule.o[o_r];
+                        } else {
+                            console.log("UpdateACLOutput: new element " + o_r)
+                            newOutputRules[o_r] = {
+                                p: ".*",
+                                "pt": "re"
+                            }
                         }
+                        console.log("UpdateACLOutput:add " + o_r);
+                        console.log(newOutputRules[o_r]);
 
                     }
+                    newaclrules.push({
+                        "i": rule.i,
+                        "o": newOutputRules
+                    })
                 }
+                node.aclrules = newaclrules;
+
 
             }
 
 
 
             function AddACLOutput(item) {
-                console.log("AACLO:")
+                /*console.log("AACLO:")
                 console.log(item)
 
                 for (var j = 0; j < node.aclrules.length; j++) {
@@ -286,7 +330,7 @@
                     }
                     console.log("AACLO:R+" + j + ":" + JSON.stringify(node.aclrules[j]["o"]))
                     console.log("Output Rules:" + JSON.stringify(node.aclrules[j]["o"]))
-                }
+                }*/
 
             }
 
@@ -326,7 +370,6 @@
                 console.log(elementIn)
                 console.log(newWidth)
                 elementIn.find('.red-ui-typedInput').typedInput("width", newWidth - 130);
-
             }
 
             function resizeRuleOut(elementOut) {
@@ -334,13 +377,12 @@
                 console.log(elementOut)
                 console.log(newWidth)
                 elementOut.find('.red-ui-typedInput').typedInput("width", 450);
-
+                //     elementOut.find('.red-ui-typedInput').typedInput("width", newWidth - 130);
             }
 
             function resizeRuleACL(element) {
                 var newWidth = element.width();
                 element.find('.red-ui-typedInput').typedInput("width", 450);
-
             }
 
 
@@ -352,7 +394,7 @@
                 .css('min-width', '450px')
                 .editableList({
                     addItem: function (container, i, opt) {
-                        console.log(opt)
+                        console.log(`ACL Rules Build for ${JSON.stringify(opt)}`)
                         var aclrule = opt;
                         if (!aclrule.hasOwnProperty('i')) {
                             aclrule = GenerateRule()
@@ -466,6 +508,7 @@
                         var newWidth = $("#node-input-aclrules-container").width();
                         resizeRuleACL(container);
                     },
+                    resize: RulesACLchange,
                     resizeItem: resizeRuleACL,
                     removable: true,
                     sortable: true
@@ -473,10 +516,6 @@
 
 
 
-            for (var i = 0; i < this.aclrules.length; i++) {
-                var item = this.aclrules[i];
-                $("#node-input-aclrules-container").editableList('addItem', item);
-            }
 
 
             $('#node-input-inputfields-container')
@@ -523,7 +562,7 @@
                         var newWidth = $("#node-input-inputfields-container").width();
                         resizeRuleIn(container);
                         console.log("Input Display completed")
-                        UpdateACLInput();
+                        //UpdateACLInput();
                         AddACLInput(inputfield)
                         UpdateACLRules();
                     },
@@ -532,16 +571,16 @@
                     sortable: true,
                     removeItem: function (data) {
                         console.log("An item has been removed:" + data);
-                        UpdateACLInput();
+                        //   UpdateACLInput();
 
                     }
 
                 });
 
-            for (var i = 0; i < this.inputfields.length; i++) {
-                var item = this.inputfields[i];
-                $("#node-input-inputfields-container").editableList('addItem', item);
+            for (const inputf of node.inputfields) {
+                $("#node-input-inputfields-container").editableList('addItem', inputf);
             }
+
 
             $('#node-input-outputfields-container')
                 .css('min-height', '150px')
@@ -599,23 +638,23 @@
                     removable: true,
                     sortable: true
                 });
-            for (var i = 0; i < this.outputfields.length; i++) {
-                var item = this.outputfields[i];
-                $("#node-input-outputfields-container").editableList('addItem', item);
+            for (const outputf of node.outputfields) {
+                $("#node-input-outputfields-container").editableList('addItem', outputf);
             }
-            for (var i = 0; i < this.aclrules.length; i++) {
-                var item = this.aclrules[i];
+
+            console.log("aclrules detail before building it")
+            console.log(JSON.stringify(this.aclrules))
+            $("#node-input-aclrules-container").editableList('empty')
+            for (const item of this.aclrules) {
                 $("#node-input-aclrules-container").editableList('addItem', item);
             }
         },
 
-        oneditsave: function () {
+        oneditsave:  function() {
             var node = this;
-
             var inputfields = $("#node-input-inputfields-container").editableList("items");
-
             node.inputfields = [];
-            inputfields.each(function (i) {
+            inputfields.each( function(i){
                 var inputfield = $(this);
                 var ifs = {
                     n: inputfield.find(".node-input-inputfield-name").val(),
@@ -627,12 +666,9 @@
                 };
                 node.inputfields.push(ifs);
             });
-
-
             var outputfields = $("#node-input-outputfields-container").editableList("items");
-
             node.outputfields = [];
-            outputfields.each(function (i) {
+            outputfields.each( function (i) {
                 var outputfield = $(this);
                 var ofs = {
                     n: outputfield.find(".node-input-outputfield-name").val(),
@@ -647,34 +683,44 @@
 
 
             var aclrules = $("#node-input-aclrules-container").editableList("items");
-
             node.aclrules = [];
-            aclrules.each(function (i) {
+            aclrules.each(function (element) {
+                console.log(` ACL Rules Saving element: ${element}`)
+
                 var aclfield = $(this);
                 var input_r = {};
                 var output_r = {};
-                for (var i = 0; i < node.inputfields.length; i++) {
-                    console.log(item)
-                    var item = node.inputfields[i];
-                    input_r[item.n] = {
-                        p: aclfield.find(".node-input-aclrule-inputfield-" + item.n).typedInput(
-                            'value'),
-                        pt: aclfield.find(".node-input-aclrule-inputfield-" + item.n)
-                            .typedInput('type')
+                for (const item of node.inputfields) {
+                //    console.log(JSON.stringify(item))
+                    const inputfieldElement = aclfield.find(".node-input-aclrule-inputfield-" + item.n)
+                //    console.log(inputfieldElement.length)
+                  if (inputfieldElement.length>0){
+                        input_r[item.n] = {
+                            p: inputfieldElement.typedInput(
+                                    'value'),
+                            pt: inputfieldElement.typedInput('type')
+                        }
+                    }else
+                    {
+                        input_r[item.n]={p:".*",pt:"re"};
                     }
                 }
-
-                for (var i = 0; i < node.outputfields.length; i++) {
-                    console.log(item)
-                    var item = node.outputfields[i];
+                for (const item of node.outputfields) {
+                 //   console.log(JSON.stringify(item))
+                 const outputfieldElement =  aclfield.find(".node-input-aclrule-outputfield-" + item.n);
+                 if (outputfieldElement.length>0){
+                        output_r[item.n] = {
+                            p:outputfieldElement.typedInput('value'),
+                            pt: outputfieldElement.typedInput('type')
+                        }
+                 }else{
                     output_r[item.n] = {
-                        p: aclfield.find(".node-input-aclrule-outputfield-" + item.n)
-                            .typedInput('value'),
-                        pt: aclfield.find(".node-input-aclrule-outputfield-" + item.n)
-                            .typedInput('type')
+                        p:"payload",
+                        pt: "msg"
                     }
+                 }
                 }
-
+                
                 node.aclrules.push({
                     "i": input_r,
                     "o": output_r
