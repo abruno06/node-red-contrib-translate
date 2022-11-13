@@ -1,88 +1,13 @@
-var loaded  =false;
-var debug = false;
+let loaded  =false;
+let debug = false;
 module.exports = function (RED) {
     "use strict";
-    //var path = require("path");
-
     // This module is highly inspired from node-red 'change' node
 
 if (!loaded){
     loaded=true;
     load(RED.settings);
 }
-
-    // [
-    //     {
-    //         "id": "71531ff6.61c188",
-    //         "type": "translate",
-    //         "inputfields": [
-    //             {
-    //                 "n": "idx-1",
-    //                 "p": "payload",
-    //                 "pt": "msg"
-    //             },
-    //             {
-    //                 "n": "hello",
-    //                 "p": "payload",
-    //                 "pt": "msg"
-    //             },
-    //             {
-    //                 "n": "idx-3",
-    //                 "p": "payload",
-    //                 "pt": "msg"
-    //             }
-    //         ],
-    //         "outputfields": [
-    //             {
-    //                 "n": "Name-O",
-    //                 "p": "payload",
-    //                 "pt": "msg"
-    //             },
-    //             {
-    //                 "n": "Name-5",
-    //                 "p": "payload",
-    //                 "pt": "msg"
-    //             }
-    //         ],
-    //         "aclrules": [
-    //             {
-    //                 "i": {
-    //                     "idx-1": {
-    //                         "p": ".*",
-    //                         "pt": "re"
-    //                     },
-    //                     "hello": {
-    //                         "p": ".*",
-    //                         "pt": "re"
-    //                     },
-    //                     "idx-3": {
-    //                         "p": ".*",
-    //                         "pt": "re"
-    //                     }
-    //                 },
-    //                 "o": {
-    //                     "Name-O": {
-    //                         "p": "payload",
-    //                         "pt": "msg"
-    //                     },
-    //                     "Name-5": {
-    //                         "p": "payload",
-    //                         "pt": "msg"
-    //                     }
-    //                 }
-    //             }
-    //         ],
-
-    //     }
-    // ]
-
-
-
-
-    // 
-
-
-
 
 
     /// INPUT 
@@ -92,7 +17,7 @@ if (!loaded){
         let inputType;
         let r = {};
         if (debug) console.log("start getInputValue on:", rule, " msg:", msg);
-        var inputName = rule.n;
+        let inputName = rule.n;
         if (rule.pt === 'msg' || rule.pt === 'flow' || rule.pt === 'global') {
             if (rule.pt === "msg") {
                 inputType = rule.pt;
@@ -105,7 +30,7 @@ if (!loaded){
                 RED.util.setMessageProperty(msg,"_xlate."+inputName,inputValue);
                 done(null, r);
             } else if (rule.pt === 'flow' || rule.pt === 'global') {
-                var contextKey = RED.util.parseContextStore(rule.p);
+                let contextKey = RED.util.parseContextStore(rule.p);
                 node.context()[rule.pt].get(contextKey.key, contextKey.store, (err, inputValue) => {
                     if (err) {
                         done(err)
@@ -322,18 +247,16 @@ if (!loaded){
                     RED.util.setMessageProperty(msg, xlate.to, value);
 
                 } catch (err) {}
-                //return done(undefined, msg);
                 completeOutputRules(msg, node, currentElement, outputvector, done)
             } else if (xlate.tot === 'flow' || xlate.tot === 'global') {
-                var contextKey = RED.util.parseContextStore(xlate.to);
-                var target = node.context()[xlate.tot];
-                var callback = err => {
+                let contextKey = RED.util.parseContextStore(xlate.to);
+                let target = node.context()[xlate.tot];
+                let callback = err => {
                     if (err) {
                         node.error(err, msg);
                         return done(undefined, null);
                     } else {
                         completeOutputRules(msg, node, currentElement, outputvector, done)
-                        //done(undefined, msg);
                     }
                 }
                 target.set(contextKey.key, value, contextKey.store, callback);
@@ -360,7 +283,7 @@ if (!loaded){
 
 
     function getACLOutputValue(msg, xlate, done) {
-        var value = xlate.p;
+        let value = xlate.p;
         if (xlate.pt === 'json') {
             value = JSON.parse(xlate.p);
         } else if (xlate.pt === 'bin') {

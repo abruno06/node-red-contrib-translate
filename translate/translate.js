@@ -5,13 +5,13 @@ module.exports = function (RED) {
 
     function TranslateNode(n) {
         RED.nodes.createNode(this, n);
-        var node = this;
+        let node = this;
 
         node.inputfields = n.inputfields;
         node.outputfields = n.outputfields;
         node.aclrules = n.aclrules;
 
-        var valid = true;
+        let valid = true;
 
         if (valid) {
             this.on('input', (msg, send, done) => {
